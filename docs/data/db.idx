@@ -1,0 +1,3 @@
+nimTitle	db	data/db.html	module src/data/db		0
+nim	initDb	data/db.html#initDb	proc initDb(): void		13
+nim	getConn	data/db.html#getConn	proc getConn(): Option[DbConn]		23

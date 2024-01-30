@@ -1,0 +1,2 @@
+nimTitle	home	modules/home.html	module src/modules/home		0
+nim	index	modules/home.html#index,Request,RequestArgs	proc index(r: Request; a: RequestArgs): Response		4
