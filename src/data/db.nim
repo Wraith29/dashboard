@@ -1,27 +1,27 @@
-import std/[options, os]
+import std/[options]
 import db_connector/[db_sqlite]
 
 var conn: Option[DbConn] = none(DbConn)
 
-proc getInitScripts(): seq[string] {.raises: [OSError].} =
-  for child in os.walkDir("./sql", true):
-    if child.kind != pcFile:
-      continue
-
-    result.add(child.path)
-
-proc initDb*(): void {.raises: [DbError, IOError].} =
+proc initDb*(): void {.raises: [DbError].} =
   if conn.isNone():
     conn = some(open("dashboard.db", "", "", ""))
 
-  const initScripts = static getInitScripts()
+when defined(createDb):
+  import std/[os, strutils, strformat, sugar]
+
+  initDb()
+  let initScripts = collect:
+    for child in os.walkDir("src/data/sql"):
+      if child.path.endsWith(".sql"):
+        child.path
 
   for file in initScripts:
     let script = readFile(file)
-    echo "Sql Script: ", script
+    echo fmt"Executing Script: {file}"
     conn.get().exec(sql script)
 
-proc getConn*(): Option[DbConn] {.raises: [IOError].} =
+proc getConn*(): Option[DbConn] {.raises: [DbError].} =
   if conn.isNone(): initDb()
 
   return conn
