@@ -1,5 +1,5 @@
-*.exe
-*.db
+.venv/
+.vscode/
 
-/env/
-/packages/
+__pycache__/
+*.pyc

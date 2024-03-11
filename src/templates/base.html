@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  {% if not config.DEBUG %}
+  <base href="http://localhost/dashboard/" target="_self" />
+  {% else %}
+  <base href="http://localhost:5000/" target="_self" />
+  {% endif %}
+
+  <title>
+    Personal Dashboard - {% block title %}{% endblock %}
+  </title>
+
+  {% block static %}{% endblock %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css', _external=True) }}" />
+
+  <script src="https://kit.fontawesome.com/40168ff6c9.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+  <main>
+    <div class="header">
+      <ul class="header-items" id="header-items">
+        <li class="header-item">
+          <a class="link header-link" href="">
+            Home
+          </a>
+        </li>
+        <li class="header-item">
+          <a class="link header-link" href="recipe-manager">
+            Recipe Manager
+          </a>
+        </li>
+      </ul>
+    </div>
+    <div class="content">
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</body>
+
+</html>

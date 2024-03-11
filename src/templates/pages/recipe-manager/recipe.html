@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+
+<!--
+This page with bring in something of type `src/models/recipe` under the name "recipe"
+-->
+
+{% block static %}
+<script src="{{ url_for('static', filename='scripts/recipe-manager/recipe.js', _external=True)}}" type="text/javascript"></script>
+{% endblock %}
+
+{% block title %}
+{{recipe.name}}
+{% endblock %}
+
+{% block content %}
+
+<h1>{{recipe.name}}</h1>
+<h4>{{recipe.description}}</h4>
+
+<span class="serves-block">
+  <p>Serves:</p>
+  <span id="serves-editor">
+    <i class="fa-solid fa-minus-circle" onclick="recipePageState.decrementServes()"></i>
+    <input id="serves-value" type="text" inputmode="numeric" value="{{recipe.serves}}" onchange="() => {console.log('Hello')}" />
+    <i class="fa-solid fa-plus-circle" onclick="recipePageState.incrementServes()"></i>
+  </span>
+</span>
+
+<div id="ingredients-block">
+  <h2>Ingredients</h2>
+  <ul class="recipe-list" id="ingredients-list">
+    {% for ingredient in recipe.ingredients %}
+    <li id="ingredient-{{loop.index}}">
+      <span class="ingredient-line">
+        <p class="ingredient-name">{{ingredient.name}} -</p>
+        <p class="ingredient-quantity" id="ingredient-{{loop.index}}-quantity" data-originalQuantity="{{ingredient.quantity}}">{{ingredient.quantity}}</p>
+        <p class="ingredient-measurement">{{ingredient.measurement}}</p>
+      </span>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div id="instructions-block">
+  <h2>Instructions</h2>
+  <ul class="recipe-list" id="instructions-list">
+    {% for instruction in recipe.instructions %}
+    <li>
+      <p>{{instruction}}</p>
+    </li>
+    {% endfor %}
+  </ul>
+</div>
+
+{% endblock %}
