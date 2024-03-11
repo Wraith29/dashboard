@@ -1,2 +1,0 @@
-nimTitle	routes	modules/recipe/routes.html	module src/modules/recipe/routes		0
-nim	recipeModule	modules/recipe/routes.html#recipeModule	proc recipeModule(): Module		6
