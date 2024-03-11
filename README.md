@@ -4,6 +4,28 @@ A dashboard app that contains / will contain several modules that I can use in m
 
 ## Setup
 
+### Development
+
+Setting up for development requires having a mongodb instance up and running on your machine, either running on port 27017 (Mongo Default) or customising the value in [.env.dev](./.env.dev)
+
+```sh
+# Create a virtual python environment
+python -m venv .venv
+
+# Activate the virtual env
+./.venv/Scripts/activate
+
+# Install the dependencies
+pip install -r requirements.txt
+
+# Run the app
+flask run
+```
+
+### Production
+
+^ Production simply means to be running in the background, and for actual usage.
+
 All of the setup has been configured into the `Dockerfile` and `docker-compose.yml` files so that it simply takes running
 
 ```sh
