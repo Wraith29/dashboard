@@ -60,6 +60,49 @@ class RecipePageState {
   }
 }
 
+/**
+ * @param {KeyboardEvent} ev
+ */
+function handleTagSubmit(ev) {
+  const input = ev.target;
+  if (input === null) {
+    console.error("Tag Input not found");
+    return;
+  }
+
+  if (input.value.length < 5) {
+    input.classList.remove("tag-input-medium", "tag-input-large");
+    input.classList.add("tag-input-small");
+  } else if (input.value.length >= 5 && input.value.length < 10) {
+    input.classList.remove("tag-input-small", "tag-input-large");
+    input.classList.add("tag-input-medium");
+  } else {
+    input.classList.remove("tag-input-small", "tag-input-medium");
+    input.classList.add("tag-input-large");
+  }
+
+  if (ev.key === "Enter") {
+  }
+}
+
+/**
+ * @returns {void}
+ */
+function addTag() {
+  const tagsList = document.querySelector("ul#recipe-tags-list");
+  if (tagsList === null) {
+    console.error("Unable to find tags list");
+    return;
+  }
+
+  const tagInput = document.createElement("input");
+  tagInput.type = "text";
+  tagInput.classList.add("tag", "tag-input-small");
+  tagInput.onkeydown = handleTagSubmit;
+
+  tagsList.append(tagInput);
+}
+
 /** @type {RecipePageState} */
 let recipePageState;
 

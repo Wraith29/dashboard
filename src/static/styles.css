@@ -190,3 +190,43 @@ main {
   display: flex;
   list-style-type: circle;
 }
+
+#tags-container {
+  display: flex;
+}
+
+#recipe-tags-list {
+  list-style-type: none;
+  display: flex;
+}
+
+#add-tag-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-left: 5px;
+}
+
+.tag {
+  background-image: linear-gradient(
+    to bottom right,
+    var(--hdr-hvr-start),
+    var(--hdr-hvr-end)
+  );
+  color: var(--bg-colour);
+  padding: 3px;
+  border: 1px solid var(--bg-colour);
+  border-radius: 5px;
+}
+
+.tag-input-small {
+  width: 25px;
+}
+
+.tag-input-medium {
+  width: 50px;
+}
+
+.tag-input-large {
+  width: 75px;
+}
