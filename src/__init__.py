@@ -1,6 +1,7 @@
 from flask import Flask
+from beartype.claw import beartype_this_package
 
-from .app import create_app
+from src.app import create_app
 
 
 def main() -> Flask:
@@ -10,4 +11,5 @@ def main() -> Flask:
 
 
 if __name__ == "__main__":
+    beartype_this_package()
     raise SystemExit(main())

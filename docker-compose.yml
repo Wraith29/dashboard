@@ -19,7 +19,6 @@ services:
     depends_on:
       - mongo
     env_file:
-      - .env
       - .flaskenv
     environment:
       - FLASK_DEBUG=false

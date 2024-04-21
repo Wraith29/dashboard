@@ -13,10 +13,7 @@ recipe_bp = Blueprint("recipe", __name__, url_prefix="/recipe-manager")
 def recipe_manager() -> tuple[str, int]:
     recipes = RecipeClient().get_all_recipes()
 
-    return (
-        render_template("pages/recipe-manager/index.html", recipes=recipes),
-        200
-    )
+    return (render_template("pages/recipe-manager/index.html", recipes=recipes), 200)
 
 
 @recipe_bp.get("/create-recipe")
@@ -29,9 +26,6 @@ def recipe(recipe_name: str) -> tuple[str, int] | Response:
     recipe = RecipeClient().get_by_query_name(recipe_name)
 
     if recipe is None:
-        return redirect(url_for('view.home.not_found'))
+        return redirect(url_for("view.home.not_found"))
 
-    return (
-        render_template("pages/recipe-manager/recipe.html", recipe=recipe),
-        200
-    )
+    return (render_template("pages/recipe-manager/recipe.html", recipe=recipe), 200)

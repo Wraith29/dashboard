@@ -4,9 +4,11 @@ from flask import Blueprint
 
 from src.routes.view.home import home_bp
 from src.routes.view.recipe import recipe_bp
+from src.routes.view.setlist import setlist_bp
 
 
 view_bp = Blueprint("view", __name__)
 
 view_bp.register_blueprint(home_bp)
 view_bp.register_blueprint(recipe_bp)
+view_bp.register_blueprint(setlist_bp)

@@ -60,10 +60,20 @@ class RecipePageState {
   }
 }
 
+function loadTags(tags) {
+  /** @type {NodeListOf<HTMLLIElement>} */
+  const existingTagElements = document.querySelectorAll("li.tag");
+  const existingTags = [];
+  for (const tagElem of existingTagElements) {
+    existingTags.push(tagElem);
+  }
+}
+
 /**
  * @param {KeyboardEvent} ev
+ * @returns {Promise<void>}
  */
-function handleTagSubmit(ev) {
+async function handleTagSubmit(ev) {
   const input = ev.target;
   if (input === null) {
     console.error("Tag Input not found");
@@ -82,6 +92,25 @@ function handleTagSubmit(ev) {
   }
 
   if (ev.key === "Enter") {
+    const queryName = document.location.href.split("/").slice(-1)[0];
+    const value = input.value;
+
+    if (value) {
+      // the add-tag route will return all tags, including the new one
+      // and we can use that data to refresh the tag list
+      await fetch(`/api/recipe/${queryName}/add-tag`, {
+        method: "PUT",
+        body: JSON.stringify({
+          tag: value,
+        }),
+      })
+        .then((res) => res.json())
+        .then((data) => {
+          loadTags(data);
+        });
+    }
+
+    input.remove();
   }
 }
 
@@ -101,6 +130,7 @@ function addTag() {
   tagInput.onkeydown = handleTagSubmit;
 
   tagsList.append(tagInput);
+  tagInput.focus();
 }
 
 /** @type {RecipePageState} */

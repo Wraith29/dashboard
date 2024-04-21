@@ -2,6 +2,7 @@
 
 {% block static %}
 <script src="{{ url_for('static', filename='scripts/recipe-manager/create.js', _external=True) }}" type="text/javascript"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/recipe-manager.css', _external=True) }}" />
 {% endblock %}
 
 {% block title %}
@@ -11,7 +12,7 @@ Create Recipe
 {% block content %}
 <h1 class="centered page-title">Add New Recipe</h1>
 
-<div class="recipe-form">
+<div class="form">
   <div class="form-row">
     <input class="form-input" id="recipe-name-input" type="text" placeholder="Recipe Name" />
   </div>

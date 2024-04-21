@@ -8,6 +8,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+RUN rm config/settings.toml
+
+COPY config/settings.prod.toml config/settings.toml
+
 EXPOSE 5000
 
 CMD ["flask", "run"]

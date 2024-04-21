@@ -4,9 +4,29 @@ A dashboard app that contains / will contain several modules that I can use in m
 
 ## Setup
 
+### Config
+
+Development configuration should live in `config/settings.toml`, and Production config should live in `config/settings.prod.toml`
+
+Common settings include:
+
+```toml
+secret-key = "a secret key"
+
+[environment]
+mode = "debug" | "prod"
+port = "5000"
+
+[mongo]
+port = 27017
+hort = localhost
+```
+
+Module-level settings will be listed & described in their descriptions found later in the page
+
 ### Development
 
-Setting up for development requires having a mongodb instance up and running on your machine, either running on port 27017 (Mongo Default) or customising the value in [.env.dev](./.env.dev)
+Setting up for development requires having a mongodb instance up and running on your local machine, with the port correctly configured in `settings.toml`.
 
 ```sh
 # Create a virtual python environment
@@ -42,6 +62,7 @@ All data is then stored within a docker volume, which will persist between sessi
 
 - [ ] [Recipe Manager](#recipe-manager)
 - [ ] [Car Management](#car-management)
+- [ ] [Setlist Generator](#setlist-generator)
 
 ### Recipe Manager
 
@@ -64,3 +85,25 @@ This module is used to manage various things to do with looking after cars. The 
 
 - [ ] MOT Reminders
 - [ ] Service Reminders
+
+### Setlist Generator
+
+This module can be used to generate a [Spotify](https://open.spotify.com/) playlist based on an artists current ongoing tour, on [setlist.fm](https://www.setlist.fm/)
+
+**settings.toml:**
+
+```toml
+[spotify]
+client-id=myClientId
+client-secret=myClientSecret
+
+[setlist]
+api-key=MyApiKey
+```
+
+**Features:**
+
+- [ ] Create a playlist
+  - [ ] For an ongoing tour
+  - [ ] For a specific tour (not ongoing)
+- [ ] View Tour History

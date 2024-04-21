@@ -1,28 +1,59 @@
 __all__ = ["Config"]
 
-from dotenv import get_key, load_dotenv
+from enum import Enum
+from logging import getLogger
+from tomllib import load
+from typing import TypedDict
+
+
+class EnvironmentMode(Enum):
+    debug = "debug"
+    prod = "prod"
+
+
+class Environment(TypedDict):
+    mode: EnvironmentMode
+    port: int
+
+
+class MongoSettings(TypedDict):
+    port: int
+    host: str
+
+
+class SpotifySettings(TypedDict):
+    state: str
+    client_id: str
+    client_secret: str
+    redirect_uri: str
+
+
+class SetlistSettings(TypedDict):
+    api_key: str
 
 
 class Config:
-    _dotenv_path: str
-    mongodb_port: int = 27017
-    mongodb_host: str = "localhost"
-    debug: bool = False
+    environment: Environment
+    secret_key: str
+    mongo: MongoSettings
+    spotify: SpotifySettings
+    setlist: SetlistSettings
 
     @staticmethod
-    def get_value(key: str) -> str:
-        val = get_key(Config._dotenv_path, key)
+    def init() -> None:
+        logger = getLogger()
+        cfg_path = "config/settings.toml"
 
-        if val is None:
-            raise KeyError(f"Key {key} not found in {Config._dotenv_path}")
+        logger.debug(f"Loading Config from {cfg_path}")
 
-        return val
+        cfg_file = open(cfg_path, "rb")
 
-    @staticmethod
-    def init(debug: bool) -> None:
-        Config._dotenv_path = ".env.dev" if debug else ".env"
-        load_dotenv(Config._dotenv_path)
+        cfg = load(cfg_file)
 
-        Config.debug = debug
-        Config.mongodb_port = int(Config.get_value("MONGODB_PORT"))
-        Config.mongodb_host = Config.get_value("MONGODB_HOST")
+        Config.environment = cfg["environment"]
+        Config.secret_key = cfg["secret-key"]
+        Config.mongo = cfg["mongo"]
+        Config.spotify = cfg["spotify"]
+        Config.setlist = cfg["setlist"]
+
+        cfg_file.close()

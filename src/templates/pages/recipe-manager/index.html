@@ -4,7 +4,12 @@
 Recipe Manager
 {% endblock %}
 
+{% block static %}
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/recipe-manager.css', _external=True) }}" />
+{% endblock %}
+
 {% block content %}
+
 <h1 class="centered">Recipe Manager</h1>
 
 <div class="centered">

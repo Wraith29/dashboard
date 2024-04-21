@@ -6,6 +6,7 @@ This page with bring in something of type `src/models/recipe` under the name "re
 
 {% block static %}
 <script src="{{ url_for('static', filename='scripts/recipe-manager/recipe.js', _external=True)}}" type="text/javascript"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/recipe-manager.css', _external=True) }}" />
 {% endblock %}
 
 {% block title %}
@@ -18,7 +19,9 @@ This page with bring in something of type `src/models/recipe` under the name "re
 <span id="tags-container">
   <ul id="recipe-tags-list">
     {% for tag in recipe.tags %}
-    <li class="tag">{{tag}}</li>
+    <li class="tag inline">
+      <p>{{tag}}</p>
+    </li>
     {% endfor %}
   </ul>
   <i id="add-tag-btn" class="fa-solid fa-plus-circle" onclick="addTag()"></i>
@@ -29,7 +32,7 @@ This page with bring in something of type `src/models/recipe` under the name "re
   <p>Serves:</p>
   <span id="serves-editor">
     <i class="fa-solid fa-minus-circle" onclick="recipePageState.decrementServes()"></i>
-    <input id="serves-value" type="text" inputmode="numeric" value="{{recipe.serves}}" onchange="() => {console.log('Hello')}" />
+    <input id="serves-value" type="text" inputmode="numeric" value="{{recipe.serves}}" />
     <i class="fa-solid fa-plus-circle" onclick="recipePageState.incrementServes()"></i>
   </span>
 </span>

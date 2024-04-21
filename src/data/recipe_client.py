@@ -4,7 +4,7 @@ from pymongo import MongoClient
 from pymongo.collection import Collection
 from pymongo.database import Database
 from src.config import Config
-from src.models.recipe import Recipe, query_name
+from src.models.recipes.recipe import Recipe, query_name
 
 
 class RecipeClient:
@@ -12,7 +12,7 @@ class RecipeClient:
     _db: Database[Recipe]
 
     def __init__(self) -> None:
-        self._client = MongoClient(host=Config.mongodb_host, port=Config.mongodb_port)
+        self._client = MongoClient(host=Config.mongo["host"], port=Config.mongo["port"])
         self._db = self._client["dashboard"]
 
     def get_collection(self) -> Collection[Recipe]:
@@ -24,6 +24,24 @@ class RecipeClient:
 
         collection.insert_one(recipe)
 
+    def add_tag_to_recipe(self, name: str, tag: str) -> list[str]:
+        collection = self.get_collection()
+
+        result = collection.update_one({"query_name": name}, {"$push": {"tags": tag}})
+
+        if result.raw_result is None:
+            return []
+
+        if result.raw_result["ok"] != 1:
+            return []
+
+        recipe = collection.find_one({"query_name": name})
+
+        if recipe is None:
+            return []
+
+        return recipe["tags"]
+
     def get_all_recipes(self) -> list[Recipe]:
         recipes: list[Recipe] = []
 
@@ -34,7 +52,7 @@ class RecipeClient:
         return recipes
 
     def get_by_query_name(self, name: str) -> Recipe | None:
-        value = self.get_collection().find_one({'query_name': name})
+        value = self.get_collection().find_one({"query_name": name})
 
         if value is None:
             return None

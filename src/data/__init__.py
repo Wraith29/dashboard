@@ -1,6 +1,7 @@
 __all__ = ["init_db"]
 
 import logging
+from typing import Any
 from pymongo import MongoClient
 
 from src.config import Config
@@ -9,9 +10,9 @@ from src.config import Config
 def init_db() -> None:
     logger = logging.getLogger()
 
-    logger.debug(f"Connecting to mongo on {Config.mongodb_host}:{Config.mongodb_port}")
+    logger.debug("Connecting to mongo on '%s:%s'", Config.mongo["host"], Config.mongo["port"])
 
-    client: MongoClient = MongoClient(host=Config.mongodb_host, port=Config.mongodb_port)
+    client: MongoClient[Any] = MongoClient(host=Config.mongo["host"], port=Config.mongo["port"])
 
     logger.debug("Successfully connected to mongo")
 
