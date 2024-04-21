@@ -17,6 +17,7 @@ pymongo==4.6.1
 python-dotenv==1.0.1
 refurb==2.0.0
 requests==2.31.0
+result==0.16.1
 types-requests==2.31.0.20240311
 typing_extensions==4.10.0
 urllib3==2.2.1

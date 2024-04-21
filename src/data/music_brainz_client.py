@@ -2,6 +2,7 @@ __all__ = ["MusicBrainzClient"]
 
 
 import requests
+from result import Err, Ok, Result
 from src.models.spotify.music_brainz_artist import MusicBrainzArtist
 
 
@@ -12,7 +13,7 @@ class MusicBrainzClient:
     def _query(self, args: dict[str, str]) -> str:
         return "query=" + " and ".join([f"{k}:{v}" for k, v in args.items()])
 
-    def search_artist_by_name(self, name: str) -> MusicBrainzArtist | None:
+    def search_artist_by_name(self, name: str) -> Result[MusicBrainzArtist, str]:
         query = self._query({"artist": name})
         url = f"{self.base_url}/artist/?{query}"
 
@@ -27,6 +28,6 @@ class MusicBrainzClient:
         items = response.json()
 
         if len(items) < 1:
-            return None
+            return Err("No MusicBrainz Artists were found")
 
-        return items["artists"][0]
+        return Ok(items["artists"][0])

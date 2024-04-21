@@ -1,17 +1,17 @@
 __all__ = ["SpotifyClient"]
 
 
+import operator
 from dataclasses import dataclass
 from logging import Logger, getLogger
 
 import requests
+from result import Err, Ok, Result
 
 from src.config import Config
 from src.data.music_brainz_client import MusicBrainzClient
 from src.data.setlist_client import SetlistClient
-from src.models.errors.artist_not_found_error import ArtistNotFoundError
 from src.models.errors.authentication_error import AuthenticationError
-from src.models.errors.setlist_not_found_error import SetlistNotFoundError
 from src.models.spotify.setlist import Setlist
 from src.models.spotify.setlist_track import SetlistTrack
 
@@ -35,11 +35,15 @@ class SpotifyClient:
     )
     state: str
     token: str
+    music_brainz_client: MusicBrainzClient
+    setlist_client: SetlistClient
     logger: Logger
 
     def __init__(self, token: str) -> None:
         self.state = Config.spotify["state"]
         self.token = token
+        self.music_brainz_client = MusicBrainzClient()
+        self.setlist_client = SetlistClient()
         self.logger = getLogger()
 
     @staticmethod
@@ -61,29 +65,34 @@ class SpotifyClient:
 
         return f"https://accounts.spotify.com/authorize?{query_str}"
 
-    def get_setlists(self, artist_name: str) -> list[Setlist]:
+    def get_setlists(self, artist_name: str) -> Result[list[Setlist], str]:
         self.logger.debug(f"Searching for {artist_name}'s setlists")
-        artist_mbid = MusicBrainzClient().search_artist_by_name(artist_name)
-        if artist_mbid is None:
-            msg = f"Artist {artist_name} not found on MusicBrainz.org"
-            self.logger.error(msg)
-            raise ArtistNotFoundError(msg)
+        artist_mbid = self.music_brainz_client.search_artist_by_name(artist_name)
 
-        setlists = SetlistClient().get_setlists_for_artist(artist_mbid["id"])
+        if isinstance(artist_mbid, Err):
+            self.logger.error(f"Error retrieving Artist MBID {artist_mbid.err()}")
+            return Err(artist_mbid.err())
+
+        mbid = artist_mbid.ok()
+
+        setlists = self.setlist_client.get_setlists_for_artist(mbid["id"])
+        if isinstance(setlists, Err):
+            self.logger.error(f"Error getting artist's setlists {setlists}")
+            return Err(setlists.err())
+
         setlists_with_tour_and_date = list(
             sorted(
-                filter(lambda sl: "tour" in sl and "eventDate" in sl, setlists),
-                key=lambda sl: sl["eventDate"],
+                filter(lambda sl: "tour" in sl and "eventDate" in sl, setlists.ok()),
+                key=operator.itemgetter("eventDate"),
                 reverse=True,
             )
         )
 
         if len(setlists_with_tour_and_date) < 1:
-            raise SetlistNotFoundError(
-                f"No appropriate setlists found for {artist_name}"
-            )
+            self.logger.error(f"No Setlists found for {artist_name}")
+            return Err(f"No Setlists found for {artist_name}")
 
-        return setlists_with_tour_and_date
+        return Ok(setlists_with_tour_and_date)
 
     def get_most_recent_tour_name(self, setlists: list[Setlist]) -> str:
         most_recent_setlist = setlists[0]
@@ -93,11 +102,15 @@ class SpotifyClient:
 
     def get_setlists_on_most_recent_tour(
         self, artist_name: str
-    ) -> tuple[list[Setlist], str]:
+    ) -> Result[tuple[list[Setlist], str], str]:
         setlists = self.get_setlists(artist_name)
-        tour = self.get_most_recent_tour_name(setlists)
+        if isinstance(setlists, Err):
+            self.logger.error(f"Error Getting Setlists {setlists.err()}")
+            return Err(setlists.err())
 
-        return list(filter(lambda sl: sl["tour"]["name"] == tour, setlists)), tour
+        tour = self.get_most_recent_tour_name(setlists.ok())
+
+        return Ok((list(filter(lambda sl: sl["tour"]["name"] == tour, setlists.ok())), tour))
 
     def get_tracklist_in_order(self, setlists: list[Setlist]) -> list[str]:
         tracks: dict[str, Track] = {}
@@ -116,7 +129,7 @@ class SpotifyClient:
         track_pos = {track.name: track.get_avg_position() for track in track_list}
 
         ordered_tracks = list(
-            map(lambda t: t[0], sorted(track_pos.items(), key=lambda tp: tp[1]))
+            map(operator.itemgetter(0), sorted(track_pos.items(), key=operator.itemgetter(1)))
         )
 
         return ordered_tracks
@@ -230,11 +243,20 @@ class SpotifyClient:
         if "error" in response_data:
             self.logger.error(f"Error Creating Playlist: {response.json()["error"]["message"]}")
 
-    def create_setlist_playlist_for_artist(self, artist_name: str) -> None:
+    def create_setlist_playlist_for_artist(self, artist_name: str) -> Result[None, str]:
         self.logger.debug(f"Creating playlist for {artist_name}")
-        setlists, tour_name = self.get_setlists_on_most_recent_tour(artist_name)
+
+        setlists_on_tour = self.get_setlists_on_most_recent_tour(artist_name)
+        if isinstance(setlists_on_tour, Err):
+            self.logger.error("Error getting setlists for tour")
+            return Err(f"Error getting setlists for tour {setlists_on_tour.err()}")
+
+        setlists, tour_name = setlists_on_tour.ok()
+
         track_list = self.get_tracklist_in_order(setlists)
 
         playlist_id = self.create_playlist(artist_name, tour_name)
 
         self.add_tracks_to_playlist(artist_name, playlist_id, track_list)
+
+        return Ok(None)
