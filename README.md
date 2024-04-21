@@ -19,7 +19,7 @@ port = "5000"
 
 [mongo]
 port = 27017
-hort = localhost
+hort = "localhost"
 ```
 
 Module-level settings will be listed & described in their descriptions found later in the page
