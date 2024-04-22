@@ -1,10 +1,12 @@
 __all__ = ["SpotifyClient"]
 
 
+from asyncio import gather
 import operator
 from dataclasses import dataclass
 from logging import Logger, getLogger
 
+from httpx import AsyncClient, Response
 import requests
 from result import Err, Ok, Result
 
@@ -200,59 +202,70 @@ class SpotifyClient:
         response_data = response.json()
 
         if response.status_code == 201 and "id" in response_data:
-            return response_data["id"]
+            return Ok(response_data["id"])
 
         # TODO: Improve the usability of this
         # TODO: Currently doesn't give any info to the user
-        raise ValueError("Error creating playlist")
+        return Err(f"Error creating Playlist: {response.json()}")
+
+    async def get_async(self, url: str) -> Response:
+        async with AsyncClient() as client:
+            return await client.get(url, headers={
+                "Accept": "application/json",
+                "Content-Type": "applcation/json",
+                "Authorization": f"Bearer {self.token}"
+            })
 
     # TODO: Make this perform better
     # Ideas:
     #  - query artist, then albums, and find tracks that way
     #  - consider multi-threading? is that even possible lol
-    def get_track_ids(
+    async def get_track_ids(
         self, artist_name: str, track_names: list[str]
-    ) -> list[SetlistTrack]:
+    ) -> Result[list[SetlistTrack], list[str]]:
         url = f"{self.base_url}/search"
 
         track_ids: list[SetlistTrack] = []
+        errors: list[str] = []
 
-        for track in track_names:
-            query = f"q=track:{track}+artist:{artist_name}&type=track"
+        track_urls = [f"{url}?q=track:{track}+artist:{artist_name}&type=track" for track in track_names]
+        tasks = [self.get_async(track_url) for track_url in track_urls]
 
-            response = requests.get(
-                f"{url}?{query}",
-                headers={
-                    "Accept": "application/json",
-                    "Content-Type": "applications/json",
-                    "Authorization": f"Bearer {self.token}",
-                },
-            )
+        responses = await gather(*tasks)
 
-            response_data = response.json()
-            tracks = response_data["tracks"]
-
-            if "items" not in tracks:
-                # TODO: Make this more informative
-                raise ValueError("Error Querying Spotify")
-
-            items = tracks["items"]
-
-            if len(items) < 1:
+        for response in responses:
+            if not response.is_success:
+                errors.append(f"Error quering track: {response.json()}")
                 continue
 
-            track_ids.append({"name": track, "id": items[0]["id"]})
+            response_data = response.json()
+            if "tracks" not in response_data:
+                errors.append(f"Tracks not found in {response_data}")
+                continue
 
-        return track_ids
+            tracks = response_data["tracks"]
+            if "items" not in tracks or len(tracks["items"]) < 1:
+                errors.append(f"Items not found in {response_data}")
+                continue
 
-    def add_tracks_to_playlist(
+            first_item = tracks["items"][0]
+
+            track_ids.append({"name": first_item["name"], "id": first_item["id"]})
+
+        return Ok(track_ids)
+
+    async def add_tracks_to_playlist(
         self, artist_name: str, playlist_id: str, tracks: list[str]
-    ) -> None:
+    ) -> Result[None, str]:
         url = f"{self.base_url}/playlists/{playlist_id}/tracks"
 
-        track_ids = self.get_track_ids(artist_name, tracks)
+        track_ids = await self.get_track_ids(artist_name, tracks)
+        if isinstance(track_ids, Err):
+            errors = ','.join(track_ids.err())
+            self.logger.error(errors)
+            return Err(errors)
 
-        track_uris = ",".join([f"spotify:track:{track["id"]}" for track in track_ids])
+        track_uris = ",".join([f"spotify:track:{track["id"]}" for track in track_ids.ok()])
 
         response = requests.post(f"{url}?uris={track_uris}", headers={
             "Accept": "Application/json",
@@ -264,7 +277,9 @@ class SpotifyClient:
         if "error" in response_data:
             self.logger.error(f"Error Creating Playlist: {response.json()["error"]["message"]}")
 
-    def create_setlist_playlist_for_artist(self, artist_name: str) -> Result[None, str]:
+        return Ok(None)
+
+    async def create_setlist_playlist_for_artist(self, artist_name: str) -> Result[str, str]:
         self.logger.debug(f"Creating playlist for {artist_name}")
 
         setlists_on_tour = self.get_setlists_on_most_recent_tour(artist_name)
@@ -281,6 +296,9 @@ class SpotifyClient:
             self.logger.error(f"Error creating playlist: {playlist_id.err()}")
             return Err(playlist_id.err())
 
-        self.add_tracks_to_playlist(artist_name, playlist_id.ok(), track_list)
+        success = await self.add_tracks_to_playlist(artist_name, playlist_id.ok(), track_list)
+        if isinstance(success, Err):
+            self.logger.error(success.err())
+            return Err(success.err())
 
-        return Ok(None)
+        return Ok(playlist_id.ok())

@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block static %}
+<link rel="stylesheet" href="{{ url_for('static', filename='styles/setlist.css', _external=True) }}" />
+{% endblock %}
+
+{% block title %}
+Setlist Generator
+{% endblock %}
+
+{% block content %}
+<h1 class="title">Setlist Generator</h1>
+<p class="error">{{error}}</p>
+{% endblock %}

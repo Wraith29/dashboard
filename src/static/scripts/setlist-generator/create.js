@@ -23,6 +23,10 @@ async function submit() {
     },
   })
     .then((res) => {
+      if (res.redirected) {
+        return { redirect_uri: res.url };
+      }
+
       if (res.headers.get("Content-Type") === "application/json") {
         return res.json();
       }

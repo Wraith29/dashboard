@@ -1,9 +1,9 @@
 __all__ = ["setlist_bp"]
 
 import logging
-
 import time
 from datetime import datetime
+
 import requests
 from flask import Blueprint, redirect, render_template, request, session, url_for
 from werkzeug import Response
@@ -19,8 +19,18 @@ def setlist_generator() -> tuple[str, int]:
         if "artist_name" in session:
             artist_name: str = session.get("artist_name")  # type: ignore
             if type(artist_name) is not str:
-                raise ValueError("Artist Name is an invalid type")
-            requests.get("api/setlist-generator/create-setlist", json={"artist_name": artist_name})
+                return (
+                    render_template(
+                        "pages/setlist-generator/error.html",
+                        error="Artist Name is an invalid type",
+                    ),
+                    400,
+                )
+
+            requests.get(
+                "api/setlist-generator/create-setlist",
+                json={"artist_name": artist_name},
+            )
 
         return render_template("pages/setlist-generator/index.html", refresh=True), 200
 
@@ -56,4 +66,23 @@ def auth() -> Response:
     session["spotify_token"] = access_token
     session["spotify_token_expires_at"] = expires_at
 
-    return redirect(f"{url_for("view.setlist.setlist_generator")}?token_refresh=true")
+    return redirect(url_for("view.setlist.setlist_generator", token_refresh=True))
+
+
+@setlist_bp.get("/created")
+def created() -> tuple[str, int]:
+    playlist_id = request.args.get("playlist_id")
+
+    return (
+        render_template(
+            "pages/setlist-generator/created.html", playlist_id=playlist_id
+        ),
+        200,
+    )
+
+
+@setlist_bp.get("/error")
+def error() -> tuple[str, int]:
+    msg = request.args.get("error")
+
+    return render_template("pages/setlist-generator/error.html", error=msg), 200
