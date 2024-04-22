@@ -103,7 +103,7 @@ api-key=MyApiKey
 
 **Features:**
 
-- [ ] Create a playlist
-  - [ ] For an ongoing tour
+- [x] Create a playlist
+  - [x] For an ongoing tour
   - [ ] For a specific tour (not ongoing)
 - [ ] View Tour History
