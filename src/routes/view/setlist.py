@@ -17,7 +17,7 @@ setlist_bp = Blueprint("setlist", __name__, url_prefix="/setlist-generator")
 def setlist_generator() -> tuple[str, int]:
     if "token_refresh" in request.args:
         if "artist_name" in session:
-            artist_name: str = session.get("artist_name")
+            artist_name: str = session.get("artist_name")  # type: ignore
             if type(artist_name) is not str:
                 raise ValueError("Artist Name is an invalid type")
             requests.get("api/setlist-generator/create-setlist", json={"artist_name": artist_name})
